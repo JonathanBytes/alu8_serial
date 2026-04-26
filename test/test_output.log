@@ -1,0 +1,13 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '/home/jonathan/Documents/bootcampChips/alu8_serial/test'
+mkdir -p sim_build/rtl
+/usr/bin/iverilog -o sim_build/rtl/sim.vvp -s tb -g2012 -I/home/jonathan/Documents/bootcampChips/alu8_serial/test/../src -f sim_build/rtl/cmds.f  /home/jonathan/Documents/bootcampChips/alu8_serial/test/../src/tt_um_jonathanbytes_alu8_serial.v /home/jonathan/Documents/bootcampChips/alu8_serial/test/../src/alu8_serial.v /home/jonathan/Documents/bootcampChips/alu8_serial/test/tb.v
+/home/jonathan/Documents/bootcampChips/alu8_serial/test/tb.v:31: error: Unknown module type: tt_um_example
+2 error(s) during elaboration.
+*** These modules were missing:
+        tt_um_example referenced 1 times.
+***
+make[1]: *** [/home/jonathan/Documents/bootcampChips/alu8_serial/test/.venv/lib/python3.12/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:52: sim_build/rtl/sim.vvp] Error 2
+make[1]: Leaving directory '/home/jonathan/Documents/bootcampChips/alu8_serial/test'
+make: *** [/home/jonathan/Documents/bootcampChips/alu8_serial/test/.venv/lib/python3.12/site-packages/cocotb_tools/makefiles/Makefile.inc:17: sim] Error 2

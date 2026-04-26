@@ -1,40 +1,182 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
-# SPDX-License-Identifier: Apache-2.0
-
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly
 
 
-@cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
-
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, unit="us")
-    cocotb.start_soon(clock.start())
-
-    # Reset
-    dut._log.info("Reset")
+async def reset_dut(dut):
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 2)
+    await FallingEdge(dut.clk)
     dut.rst_n.value = 1
 
-    dut._log.info("Test project behavior")
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+async def shift_16bits(dut, a, b, op, carry_in=0):
+    """Shift in 16 bits: 8 bits of A (LSB-first), then 8 bits of B (LSB-first)"""
+    op_bits = ((op & 0x7) << 1) | ((carry_in & 0x1) << 4)
+    
+    # Shift in operand A (8 bits, LSB-first)
+    for idx in range(8):
+        bit = (a >> idx) & 0x1
+        dut.ui_in.value = op_bits | bit
+        await ClockCycles(dut.clk, 1)
+    
+    # Shift in operand B (8 bits, LSB-first)
+    for idx in range(8):
+        bit = (b >> idx) & 0x1
+        dut.ui_in.value = op_bits | bit
+        await ClockCycles(dut.clk, 1)
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
+@cocotb.test()
+async def test_add(dut):
+    dut._log.info("TEST: ADD 5 + 3 = 8")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    await reset_dut(dut)
+    await shift_16bits(dut, a=5, b=3, op=0, carry_in=0)
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 8, f"Expected 8, got {result}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_sub(dut):
+    dut._log.info("TEST: SUB 10 - 3 = 7")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=10, b=3, op=1, carry_in=0)
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 7, f"Expected 7, got {result}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_and(dut):
+    dut._log.info("TEST: AND 0xFF & 0x0F = 0x0F")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0xFF, b=0x0F, op=2, carry_in=0)
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0x0F, f"Expected 0x0F, got {result:#x}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_or(dut):
+    dut._log.info("TEST: OR 0xF0 | 0x0F = 0xFF")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0xF0, b=0x0F, op=3, carry_in=0)
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0xFF, f"Expected 0xFF, got {result:#x}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_xor(dut):
+    dut._log.info("TEST: XOR 0xAA ^ 0x55 = 0xFF")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0xAA, b=0x55, op=4, carry_in=0)
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0xFF, f"Expected 0xFF, got {result:#x}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_not(dut):
+    dut._log.info("TEST: NOT 0x00 = 0xFF")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0x00, b=0xFF, op=5, carry_in=0)  # B doesn't matter for NOT
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0xFF, f"Expected 0xFF, got {result:#x}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_shl(dut):
+    dut._log.info("TEST: SHL 0x55 << 1 = 0xAA")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0x55, b=0xFF, op=6, carry_in=0)  # B doesn't matter for SHL
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0xAA, f"Expected 0xAA, got {result:#x}"
+    dut._log.info("✓ PASS")
+
+
+@cocotb.test()
+async def test_shr(dut):
+    dut._log.info("TEST: SHR 0xAA >> 1 = 0x55")
+    clock = Clock(dut.clk, 10, unit="us")
+    cocotb.start_soon(clock.start())
+
+    await reset_dut(dut)
+    await shift_16bits(dut, a=0xAA, b=0xFF, op=7, carry_in=0)  # B doesn't matter for SHR
+    await ReadOnly()
+
+    result = int(dut.uo_out.value)
+    done = (int(dut.uio_out.value) >> 4) & 0x1
+    
+    dut._log.info(f"Result: {result:#x}, Done: {done}")
+    assert done == 1, f"Done should be high, got {done}"
+    assert result == 0x55, f"Expected 0x55, got {result:#x}"
+    dut._log.info("✓ PASS")

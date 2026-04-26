@@ -16,12 +16,36 @@ module tt_um_jonathanbytes_alu8_serial (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  wire carry_out, zero, negative, overflow, done;
+
+  // Instantiate the ALU
+  alu8_serial alu_inst (
+      .CLK(clk),
+      .RST_n(rst_n),
+      .Bit_in(ui_in[0]),
+      .Carry_in(ui_in[4]),
+      .op(ui_in[3:1]),
+      .Data_out(uo_out),
+      .Carry_out(carry_out),
+      .Zero(zero),
+      .Negative(negative),
+      .Overflow(overflow),
+      .Done(done)
+  );
+
+  // Assign bidirectional outputs
+  assign uio_out[0] = carry_out;
+  assign uio_out[1] = zero;
+  assign uio_out[2] = negative;
+  assign uio_out[3] = overflow;
+  assign uio_out[4] = done;
+  assign uio_out[7:5] = 3'b000;
+
+  // Set uio pins 0 to 4 as outputs, others as inputs (or outputs driven to 0)
+  // Let's set all uio as outputs since we don't use them as inputs
+  assign uio_oe = 8'hFF;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, ui_in[7:5], uio_in};
 
 endmodule
