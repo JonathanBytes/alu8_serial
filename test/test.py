@@ -29,6 +29,14 @@ async def shift_16bits(dut, a, b, op, carry_in=0):
         dut.ui_in.value = op_bits | bit
         await ClockCycles(dut.clk, 1)
 
+    # Wait for Done signal with timeout
+    for _ in range(5):
+        if (int(dut.uio_out.value) >> 4) & 0x1:
+            break
+        await ClockCycles(dut.clk, 1)
+    
+    await ReadOnly()
+
 
 @cocotb.test()
 async def test_add(dut):
@@ -38,12 +46,12 @@ async def test_add(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=5, b=3, op=0, carry_in=0)
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
-    done = (int(dut.uio_out.value) >> 4) & 0x1
+    uio_out = int(dut.uio_out.value)
+    done = (uio_out >> 4) & 0x1
     
-    dut._log.info(f"Result: {result}, Done: {done}")
+    dut._log.info(f"Result: {result}, Done: {done}, UIO_OUT: {uio_out:#04x}")
     assert done == 1, f"Done should be high, got {done}"
     assert result == 8, f"Expected 8, got {result}"
     dut._log.info("✓ PASS")
@@ -57,7 +65,6 @@ async def test_sub(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=10, b=3, op=1, carry_in=0)
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -76,7 +83,6 @@ async def test_and(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0xFF, b=0x0F, op=2, carry_in=0)
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -95,7 +101,6 @@ async def test_or(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0xF0, b=0x0F, op=3, carry_in=0)
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -114,7 +119,6 @@ async def test_xor(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0xAA, b=0x55, op=4, carry_in=0)
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -133,7 +137,6 @@ async def test_not(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0x00, b=0xFF, op=5, carry_in=0)  # B doesn't matter for NOT
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -152,7 +155,6 @@ async def test_shl(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0x55, b=0xFF, op=6, carry_in=0)  # B doesn't matter for SHL
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
@@ -171,7 +173,6 @@ async def test_shr(dut):
 
     await reset_dut(dut)
     await shift_16bits(dut, a=0xAA, b=0xFF, op=7, carry_in=0)  # B doesn't matter for SHR
-    await ReadOnly()
 
     result = int(dut.uo_out.value)
     done = (int(dut.uio_out.value) >> 4) & 0x1
