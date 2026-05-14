@@ -41,7 +41,7 @@ async def shift_16bits(dut, a, b, op, carry_in=0):
 @cocotb.test()
 async def test_add(dut):
     dut._log.info("TEST: ADD 5 + 3 = 8")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -60,7 +60,7 @@ async def test_add(dut):
 @cocotb.test()
 async def test_sub(dut):
     dut._log.info("TEST: SUB 10 - 3 = 7")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -78,7 +78,7 @@ async def test_sub(dut):
 @cocotb.test()
 async def test_and(dut):
     dut._log.info("TEST: AND 0xFF & 0x0F = 0x0F")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -96,7 +96,7 @@ async def test_and(dut):
 @cocotb.test()
 async def test_or(dut):
     dut._log.info("TEST: OR 0xF0 | 0x0F = 0xFF")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -114,7 +114,7 @@ async def test_or(dut):
 @cocotb.test()
 async def test_xor(dut):
     dut._log.info("TEST: XOR 0xAA ^ 0x55 = 0xFF")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -132,7 +132,7 @@ async def test_xor(dut):
 @cocotb.test()
 async def test_not(dut):
     dut._log.info("TEST: NOT 0x00 = 0xFF")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -150,7 +150,7 @@ async def test_not(dut):
 @cocotb.test()
 async def test_shl(dut):
     dut._log.info("TEST: SHL 0x55 << 1 = 0xAA")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
@@ -168,7 +168,7 @@ async def test_shl(dut):
 @cocotb.test()
 async def test_shr(dut):
     dut._log.info("TEST: SHR 0xAA >> 1 = 0x55")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     await reset_dut(dut)
