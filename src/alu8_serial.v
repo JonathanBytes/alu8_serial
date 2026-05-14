@@ -1,3 +1,5 @@
+`default_nettype none
+
 module alu8_serial (
     input  wire       CLK,
     input  wire       RST_n,      // Reset activo en bajo
