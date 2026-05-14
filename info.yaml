@@ -1,6 +1,6 @@
 # Tiny Tapeout project information
 project:
-  title:        "ALU8 Serial"      # Project title
+  title:        "ALU8 Serial (IEEE)"      # Project title
   author:       "Jonathan Cardona Ramírez"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "8-bit serial-in ALU with parallel result and done, zero, negative/sign, carry/borrow, overflow flags (ADD, SUB, AND, OR, XOR, NOT)."      # One line description of what your project does
